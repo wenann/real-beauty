@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DermIQ — 圖像辨識</title>
+<!-- Bootstrap CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Noto+Serif+TC:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #F5EFE6;
+    --warm-white: #FBF8F3;
+    --sage: #8BA888;
+    --sage-dark: #5C7A5A;
+    --charcoal: #2A2A2A;
+    --ink: #1A1A1A;
+    --muted: #9A9188;
+    --border: #DDD5C8;
+    --shadow: 0 4px 24px rgba(42,42,42,0.07);
+  }
+  body {
+    font-family: 'Noto Serif TC', serif;
+    background: var(--warm-white);
+    color: var(--charcoal);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  /* Custom Navbar Styles */
+  .custom-navbar {
+    background: rgba(251,248,243,0.88);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+  .navbar-brand {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--ink) !important;
+  }
+  .nav-pills .nav-link {
+    color: var(--muted);
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-weight: 500;
+  }
+  .nav-pills .nav-link.active {
+    background-color: var(--sage);
+    color: white;
+  }
+  .custom-pill-container {
+    background: rgba(255,252,247,0.9);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 6px;
+  }
+  /* Main Content */
+  .main-content {
+    flex-grow: 1;
+  }
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
+    margin-bottom: 16px;
+  }
+  .custom-card {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+  }
+  .custom-card h2 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+  }
+  .custom-card ul {
+    color: var(--muted);
+    line-height: 1.8;
+  }
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg sticky-top custom-navbar py-3">
+  <div class="container">
+    <a class="navbar-brand" href="index.html">DermIQ</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+      <div class="custom-pill-container d-inline-flex mt-3 mt-lg-0">
+        <ul class="navbar-nav nav-pills gap-1">
+          <li class="nav-item">
+            <a class="nav-link" href="index.html">成分查詢</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="product-search.html">產品查詢</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="features.html">功能介紹</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="personal.html">個人化服務</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="main-content container py-5" style="max-width: 960px;">
+  <div class="mb-4">
+    <h1>成分表圖像辨識</h1>
+
+    <p class="text-muted" style="line-height: 1.8;">
+      上傳化妝品包裝上的成分標示，系統將辨識圖片中的文字，
+      並協助整理成分內容。
+    </p>
+  </div>
+
+  <div class="card custom-card p-4 p-md-5">
+    <div class="mb-4">
+      <h2>上傳成分表照片</h2>
+
+      <p class="text-muted mb-0">
+        建議使用文字清楚、光線充足且沒有反光的照片。
+      </p>
+    </div>
+
+    <div class="mb-4">
+      <label for="imageInput" class="form-label fw-bold">
+        選擇圖片
+      </label>
+
+      <input
+        class="form-control"
+        type="file"
+        id="imageInput"
+        accept="image/png, image/jpeg, image/webp"
+      >
+
+      <div class="form-text">
+        支援 JPG、PNG、WEBP 圖片。
+      </div>
+    </div>
+
+    <!-- 圖片預覽區，之後會用 JavaScript 顯示 -->
+    <div id="previewArea" class="d-none mb-4">
+      <p class="fw-bold mb-2">圖片預覽</p>
+
+      <div class="border rounded-3 p-3 text-center bg-light">
+        <img
+          id="imagePreview"
+          src=""
+          alt="成分表圖片預覽"
+          class="img-fluid rounded"
+          style="max-height: 420px;"
+        >
+      </div>
+    </div>
+
+    <button
+      type="button"
+      id="recognizeButton"
+      class="btn px-4 py-2 text-white"
+      style="background-color: var(--sage-dark);"
+      disabled
+    >
+      開始辨識
+    </button>
+    <!-- OCR 辨識結果區 -->
+<div id="ocrResultArea" class="d-none mt-4">
+  <hr class="mb-4">
+
+  <h2>辨識出的成分文字</h2>
+
+  <p class="text-muted">
+    測試階段會先顯示模擬結果，之後再換成真正的 OCR。
+  </p>
+
+  <textarea
+    id="ocrText"
+    class="form-control"
+    rows="6"
+    aria-label="OCR 辨識文字"
+  ></textarea>
+  <button
+  type="button"
+  id="splitButton"
+  class="btn mt-3 px-4 py-2"
+  style="border: 1px solid var(--sage-dark); color: var(--sage-dark);"
+>
+  整理成分
+</button>
+
+<div id="ingredientListArea" class="d-none mt-4">
+  <h2>辨識到的成分</h2>
+
+  <div
+    id="ingredientList"
+    class="d-flex flex-wrap gap-2"
+  ></div>
+
+  <button
+  type="button"
+  id="viewResultButton"
+  class="btn mt-4 px-4 py-2 text-white d-none"
+  style="background-color: var(--sage-dark);"
+>
+  查看分析結果
+</button>
+</div>
+</div>
+  </div>
+</main>
+
+
+<!-- FOOTER -->
+<footer class="py-5 mt-auto" style="background: var(--cream); color: var(--charcoal); border-top: 1px solid var(--border);">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-12 col-md-4 text-center text-md-start mb-4 mb-md-0">
+        <div class="footer-logo fw-bold mb-2" style="font-family: 'Playfair Display', serif; font-size: 1.5rem; color: var(--ink);">DermIQ</div>
+        <div class="text-muted small">智慧化妝品成分知識查詢與分析系統</div>
+      </div>
+      <div class="col-6 col-md-4 text-center">
+        <h6 class="fw-bold mb-3" style="font-family: 'Noto Serif TC', serif; letter-spacing: 1px;">快速連結</h6>
+        <ul class="list-unstyled mb-0 d-flex flex-column gap-2">
+          <li><a href="index.html" class="text-decoration-none text-muted">首頁</a></li>
+          <li><a href="features.html" class="text-decoration-none text-muted">功能介紹</a></li>
+          <li><a href="product-search.html" class="text-decoration-none text-muted">產品查詢</a></li>
+        </ul>
+      </div>
+      <div class="col-6 col-md-4 text-end">
+        <h6 class="fw-bold mb-3" style="font-family: 'Noto Serif TC', serif; letter-spacing: 1px;">聯絡我們</h6>
+        <ul class="list-unstyled text-muted small mb-0">
+          <li class="mb-2">contact@dermiq.com</li>
+          <li class="mb-2">+886 2 1234 5678</li>
+          <li>台灣台北市</li>
+        </ul>
+      </div>
+    </div>
+    <hr class="my-4" style="border-color: var(--border);">
+    <div class="text-center small text-muted" style="font-family: 'DM Mono', monospace; font-size: 0.75rem;">
+      &copy; 2024 DermIQ. COSMETIC INGREDIENT INTELLIGENCE PLATFORM. 專題系統設計
+    </div>
+  </div>
+</footer>
+
+<!-- Tesseract.js OCR -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const mockIngredients = [
+  {
+    name: 'WATER',
+    chineseName: '水',
+    aliases: ['水'],
+    purpose: '溶劑'
+  },
+  {
+    name: 'GLYCERIN',
+    chineseName: '甘油',
+    aliases: ['甘油', '丙三醇'],
+    purpose: '保濕劑'
+  },
+  {
+    name: 'NIACINAMIDE',
+    chineseName: '菸鹼醯胺',
+    aliases: ['菸鹼醯胺', '煙醯胺', '煙酰胺'],
+    purpose: '肌膚調理劑'
+  },
+  {
+    name: 'BUTYLENE GLYCOL',
+    chineseName: '丁二醇',
+    aliases: ['丁二醇', '1 3 丁二醇'],
+    purpose: '保濕劑、溶劑'
+  },
+  {
+    name: 'DIMETHICONE',
+    chineseName: '聚二甲基矽氧烷',
+    aliases: ['聚二甲基矽氧烷', '二甲基矽油', '矽靈'],
+    purpose: '柔潤劑'
+  },
+  {
+    name: 'PHENOXYETHANOL',
+    chineseName: '苯氧乙醇',
+    aliases: ['苯氧乙醇'],
+    purpose: '防腐劑'
+  }
+];
+    const savedImage = sessionStorage.getItem('ocrImage');
+    const imagePreview = document.getElementById('imagePreview');
+    const previewArea = document.getElementById('previewArea');
+    const recognizeButton = document.getElementById('recognizeButton');
+    const imageInput = document.getElementById('imageInput');
+    const ocrResultArea = document.getElementById('ocrResultArea');
+const ocrText = document.getElementById('ocrText');
+const splitButton = document.getElementById('splitButton');
+const ingredientListArea = document.getElementById('ingredientListArea');
+const ingredientList = document.getElementById('ingredientList');
+const viewResultButton =
+  document.getElementById('viewResultButton');
+
+let currentMatchResults = [];
+
+    // 顯示從首頁選取的圖片
+    if (savedImage) {
+      imagePreview.src = savedImage;
+      previewArea.classList.remove('d-none');
+      recognizeButton.disabled = false;
+    }
+
+    // 如果使用者在 OCR 頁面重新選擇圖片
+    imageInput.addEventListener('change', function (event) {
+      const selectedFile = event.target.files[0];
+
+      if (!selectedFile) {
+        previewArea.classList.add('d-none');
+        recognizeButton.disabled = true;
+        return;
+      }
+
+      if (!selectedFile.type.startsWith('image/')) {
+        alert('請選擇圖片檔案。');
+        imageInput.value = '';
+        previewArea.classList.add('d-none');
+        recognizeButton.disabled = true;
+        return;
+      }
+
+      const reader = new FileReader();
+
+      reader.onload = function () {
+        imagePreview.src = reader.result;
+        previewArea.classList.remove('d-none');
+        recognizeButton.disabled = false;
+
+        try {
+          sessionStorage.setItem('ocrImage', reader.result);
+          sessionStorage.setItem('ocrImageName', selectedFile.name);
+        } catch (error) {
+          console.error('圖片暫存失敗：', error);
+        }
+      };
+
+      reader.onerror = function () {
+        alert('讀取圖片失敗，請重新選擇圖片。');
+      };
+
+      reader.readAsDataURL(selectedFile);
+    });
+
+function preprocessImage(imageElement) {
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d', {
+    willReadFrequently: true
+  });
+
+  const originalWidth = imageElement.naturalWidth;
+  const originalHeight = imageElement.naturalHeight;
+
+  // 小圖放大，太大的圖片則縮小，避免瀏覽器負擔過重
+  const longestSide = Math.max(originalWidth, originalHeight);
+  const scale = Math.min(2, 2400 / longestSide);
+
+  canvas.width = Math.round(originalWidth * scale);
+  canvas.height = Math.round(originalHeight * scale);
+
+  context.drawImage(
+    imageElement,
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  const imageData = context.getImageData(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  const pixels = imageData.data;
+  const contrast = 1.6;
+
+  for (let i = 0; i < pixels.length; i += 4) {
+    // 將圖片轉成灰階
+    const gray =
+      pixels[i] * 0.299 +
+      pixels[i + 1] * 0.587 +
+      pixels[i + 2] * 0.114;
+
+    // 增加文字與背景的對比
+    const adjusted = Math.max(
+      0,
+      Math.min(255, (gray - 128) * contrast + 128)
+    );
+
+    pixels[i] = adjusted;
+    pixels[i + 1] = adjusted;
+    pixels[i + 2] = adjusted;
+  }
+
+  context.putImageData(imageData, 0, 0);
+
+  return canvas.toDataURL('image/jpeg', 0.95);
+}
+
+function mergeOcrTexts(...texts) {
+  const uniqueLines = new Set();
+
+  texts.forEach(function (text) {
+    text
+      .split(/\r?\n/)
+      .map(function (line) {
+        return line.trim();
+      })
+      .filter(function (line) {
+        return line !== '';
+      })
+      .forEach(function (line) {
+        uniqueLines.add(line);
+      });
+  });
+
+  return Array.from(uniqueLines).join('\n');
+}
+
+recognizeButton.addEventListener('click', async function () {
+  if (!imagePreview.src) {
+    alert('請先選擇圖片。');
+    return;
+  }
+
+  recognizeButton.disabled = true;
+  recognizeButton.textContent = '正在準備 OCR...';
+
+  ocrResultArea.classList.remove('d-none');
+  ocrText.value = '正在辨識圖片，第一次使用可能需要較長時間……';
+
+  let worker = null;
+
+  try {
+    worker = await Tesseract.createWorker([
+      'eng',
+      'chi_tra'
+    ]);
+
+    await worker.setParameters({
+      tessedit_pageseg_mode: '6',
+      preserve_interword_spaces: '1'
+    });
+
+    // 第一次：辨識經過灰階、放大及對比處理的圖片
+    recognizeButton.textContent = '正在辨識強化圖片...';
+
+    const processedImage = preprocessImage(imagePreview);
+
+    const processedResult =
+      await worker.recognize(processedImage);
+
+    const processedText =
+      processedResult.data.text.trim();
+
+    const processedConfidence =
+      processedResult.data.confidence || 0;
+
+    console.log(
+      '強化圖片 OCR 信心分數：',
+      processedConfidence
+    );
+
+    console.log(
+      '強化圖片 OCR 文字：',
+      processedText
+    );
+
+    let finalText = processedText;
+
+    // 文字太少或信心分數太低時，才啟動原圖備援
+    const shouldUseFallback =
+      processedText.length < 30 ||
+      processedConfidence < 70;
+
+    if (shouldUseFallback) {
+      recognizeButton.textContent =
+        '辨識結果不足，正在檢查原始圖片...';
+
+      try {
+        const originalResult =
+          await worker.recognize(imagePreview.src);
+
+        const originalText =
+          originalResult.data.text.trim();
+
+        const originalConfidence =
+          originalResult.data.confidence || 0;
+
+        console.log(
+          '原始圖片 OCR 信心分數：',
+          originalConfidence
+        );
+
+        console.log(
+          '原始圖片 OCR 文字：',
+          originalText
+        );
+
+        finalText = mergeOcrTexts(
+          processedText,
+          originalText
+        );
+      } catch (fallbackError) {
+        // 備援失敗時仍保留第一次辨識結果
+        console.warn(
+          '原始圖片備援辨識失敗：',
+          fallbackError
+        );
+      }
+    } else {
+      console.log(
+        '第一次辨識結果足夠，本次未啟動原圖備援。'
+      );
+    }
+
+    if (finalText) {
+      ocrText.value = finalText;
+    } else {
+      ocrText.value = '';
+
+      alert(
+        '沒有辨識到文字，請換一張更清楚的照片。'
+      );
+    }
+  } catch (error) {
+    console.error('OCR 辨識錯誤：', error);
+
+    ocrText.value = '';
+
+    alert(
+      '辨識失敗，請確認網路連線後再試一次。'
+    );
+  } finally {
+    if (worker) {
+      try {
+        await worker.terminate();
+      } catch (terminateError) {
+        console.warn(
+          'OCR Worker 關閉失敗：',
+          terminateError
+        );
+      }
+    }
+
+    recognizeButton.disabled = false;
+    recognizeButton.textContent = '重新辨識';
+
+    ocrResultArea.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
+  }
+});
+
+  // 計算兩段文字需要修改幾個字元才能變得相同
+function levenshteinDistance(textA, textB) {
+  const matrix = [];
+
+  for (let i = 0; i <= textB.length; i++) {
+    matrix[i] = [i];
+  }
+
+  for (let j = 0; j <= textA.length; j++) {
+    matrix[0][j] = j;
+  }
+
+  for (let i = 1; i <= textB.length; i++) {
+    for (let j = 1; j <= textA.length; j++) {
+      if (textB.charAt(i - 1) === textA.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j] + 1
+        );
+      }
+    }
+  }
+
+  return matrix[textB.length][textA.length];
+}
+
+// 將編輯距離換成 0～1 的相似度
+function calculateSimilarity(textA, textB) {
+  const compactA = textA.replace(/\s+/g, '');
+  const compactB = textB.replace(/\s+/g, '');
+
+  const longestLength = Math.max(
+    compactA.length,
+    compactB.length
+  );
+
+  if (longestLength === 0) {
+    return 1;
+  }
+
+  const distance = levenshteinDistance(compactA, compactB);
+
+  return 1 - distance / longestLength;
+}
+
+splitButton.addEventListener('click', function () {
+  const originalText = ocrText.value.trim();
+
+  if (!originalText) {
+    alert('目前沒有可以分析的 OCR 文字。');
+    return;
+  }
+
+  const normalizedText = originalText
+    .toUpperCase()
+    .replace(/[\r\n]+/g, ' ')
+    .replace(/[^\u3400-\u9FFFA-Z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const ocrWords = normalizedText.split(' ');
+  const matchResults = [];
+
+  mockIngredients.forEach(function (ingredient) {
+    const normalizedName = ingredient.name
+  .toUpperCase()
+  .replace(/[^\u3400-\u9FFFA-Z0-9]+/g, ' ')
+  .replace(/\s+/g, ' ')
+  .trim();
+
+// 英文名稱＋所有中文別名
+const searchableNames = [
+  ingredient.name,
+  ...(ingredient.aliases || [])
+];
+
+const normalizedSearchableNames = searchableNames.map(
+  function (name) {
+    return name
+      .toUpperCase()
+      .replace(/[^\u3400-\u9FFFA-Z0-9]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+);
+
+const paddedText = ' ' + normalizedText + ' ';
+
+const exactAlias = normalizedSearchableNames.find(
+  function (name) {
+    const containsChinese =
+      /[\u3400-\u9FFF]/.test(name);
+
+    // 兩個字以上的中文名稱允許出現在其他雜訊中
+    // 例如「甘油TR」仍然能找到「甘油」
+    if (containsChinese && name.length >= 2) {
+      return normalizedText.includes(name);
+    }
+
+    // 英文名稱及單一中文字仍要求完整邊界
+    return paddedText.includes(' ' + name + ' ');
+  }
+);
+
+// 英文名稱或任一中文別名完全符合
+if (exactAlias) {
+  matchResults.push({
+    ingredient: ingredient,
+    type: 'exact',
+    detectedText: exactAlias,
+    similarity: 1
+  });
+
+  return;
+}
+
+  // 第二種：針對英文名稱與中文別名進行模糊比對
+let bestPossibleMatch = null;
+
+normalizedSearchableNames.forEach(function (searchableName) {
+  const containsChinese =
+    /[\u3400-\u9FFF]/.test(searchableName);
+
+  const compactName =
+    searchableName.replace(/\s+/g, '');
+
+  // 中文名稱太短時，一個錯字就可能造成嚴重誤判
+  // 因此少於四個字的中文名稱不做模糊比對
+  if (containsChinese && compactName.length < 4) {
+    return;
+  }
+
+  const wordCount = searchableName.split(' ').length;
+
+  for (
+    let i = 0;
+    i <= ocrWords.length - wordCount;
+    i++
+  ) {
+    const candidate = ocrWords
+      .slice(i, i + wordCount)
+      .join(' ');
+
+    const similarity = calculateSimilarity(
+      candidate,
+      searchableName
+    );
+
+    // 中文四字名稱允許錯一個字，因此門檻設為 75%
+    // 英文仍維持較嚴格的 80%
+    const threshold = containsChinese ? 0.75 : 0.8;
+
+    if (
+      similarity >= threshold &&
+      (
+        !bestPossibleMatch ||
+        similarity > bestPossibleMatch.similarity
+      )
+    ) {
+      bestPossibleMatch = {
+        detectedText: candidate,
+        similarity: similarity,
+        matchedAlias: searchableName
+      };
+    }
+  }
+});
+
+if (bestPossibleMatch) {
+  matchResults.push({
+    ingredient: ingredient,
+    type: 'possible',
+    detectedText: bestPossibleMatch.detectedText,
+    similarity: bestPossibleMatch.similarity,
+    matchedAlias: bestPossibleMatch.matchedAlias
+  });
+}
+  });
+
+  ingredientList.innerHTML = '';
+
+  currentMatchResults = matchResults.map(function (result) {
+  return {
+    ...result,
+
+    // 完全符合直接確認；模糊符合等待使用者判斷
+    decision:
+      result.type === 'exact'
+        ? 'confirmed'
+        : 'pending'
+  };
+});
+
+  if (matchResults.length === 0) {
+    viewResultButton.classList.add('d-none');
+    
+    ingredientListArea.classList.remove('d-none');
+
+    ingredientList.innerHTML = `
+      <div class="alert alert-warning w-100 mb-0">
+        目前沒有找到資料庫中已收錄或相似的成分。
+        請檢查辨識文字，或使用更清楚的照片重新辨識。
+      </div>
+    `;
+
+    return;
+  }
+
+  currentMatchResults.forEach(function (result) {
+  const ingredient = result.ingredient;
+
+  const item = document.createElement('div');
+  item.className =
+    'd-flex flex-wrap align-items-center gap-2 w-100';
+
+  const badge = document.createElement('span');
+  badge.className = 'badge rounded-pill px-3 py-2';
+  badge.style.fontSize = '0.9rem';
+
+  if (result.type === 'exact') {
+    badge.style.backgroundColor = 'var(--sage)';
+    badge.style.color = 'white';
+
+    badge.textContent =
+      ingredient.name +
+      '｜' +
+      ingredient.chineseName +
+      '｜' +
+      ingredient.purpose;
+
+    item.appendChild(badge);
+  } else {
+    const percentage = Math.round(
+      result.similarity * 100
+    );
+
+    badge.style.backgroundColor = '#FFF3CD';
+    badge.style.color = '#725A00';
+    badge.style.border = '1px solid #E2C96F';
+
+    badge.textContent =
+      result.detectedText +
+      ' → 可能是 ' +
+      ingredient.name +
+      '（' +
+      ingredient.chineseName +
+      '，' +
+      percentage +
+      '%）';
+
+    const confirmButton = document.createElement('button');
+    confirmButton.type = 'button';
+    confirmButton.className =
+      'btn btn-sm btn-outline-success';
+    confirmButton.textContent = '確認';
+
+    const rejectButton = document.createElement('button');
+    rejectButton.type = 'button';
+    rejectButton.className =
+      'btn btn-sm btn-outline-secondary';
+    rejectButton.textContent = '排除';
+
+    confirmButton.addEventListener('click', function () {
+      result.decision = 'confirmed';
+
+      badge.style.backgroundColor = 'var(--sage)';
+      badge.style.color = 'white';
+      badge.style.border = 'none';
+
+      badge.textContent =
+        ingredient.name +
+        '｜' +
+        ingredient.chineseName +
+        '｜已確認';
+
+      confirmButton.disabled = true;
+      rejectButton.disabled = true;
+
+      confirmButton.textContent = '已確認';
+    });
+
+    rejectButton.addEventListener('click', function () {
+      result.decision = 'rejected';
+
+      badge.style.backgroundColor = '#EEEEEE';
+      badge.style.color = '#777777';
+      badge.style.border = '1px solid #CCCCCC';
+      badge.style.textDecoration = 'line-through';
+
+      badge.textContent =
+        result.detectedText +
+        '｜已排除';
+
+      confirmButton.disabled = true;
+      rejectButton.disabled = true;
+
+      rejectButton.textContent = '已排除';
+    });
+
+    item.appendChild(badge);
+    item.appendChild(confirmButton);
+    item.appendChild(rejectButton);
+  }
+
+  ingredientList.appendChild(item);
+});
+
+  ingredientListArea.classList.remove('d-none');
+viewResultButton.classList.remove('d-none');
+
+  ingredientListArea.scrollIntoView({
+    behavior: 'smooth',
+    block: 'start'
+  });
+
+  console.log('成分配對結果：', matchResults);
+});
+viewResultButton.addEventListener('click', function () {
+  if (currentMatchResults.length === 0) {
+    alert('目前沒有可以查看的成分結果。');
+    return;
+  }
+
+  const pendingResults = currentMatchResults.filter(
+  function (result) {
+    return result.decision === 'pending';
+  }
+);
+
+if (pendingResults.length > 0) {
+  alert(
+    `還有 ${pendingResults.length} 個可能成分尚未確認，` +
+    '請先選擇「確認」或「排除」。'
+  );
+
+  return;
+}
+
+const acceptedResults = currentMatchResults.filter(
+  function (result) {
+    return result.decision === 'confirmed';
+  }
+);
+
+if (acceptedResults.length === 0) {
+  alert('沒有已確認的成分可以顯示。');
+  return;
+}
+
+  const resultsToSave = acceptedResults.map(function (result) {
+    return {
+      name: result.ingredient.name,
+      chineseName: result.ingredient.chineseName,
+      purpose: result.ingredient.purpose,
+      matchType: result.type,
+      detectedText: result.detectedText,
+      similarity: result.similarity
+    };
+  });
+
+  sessionStorage.setItem(
+    'ocrMatchResults',
+    JSON.stringify(resultsToSave)
+  );
+
+  window.location.href = 'results.html?source=ocr';
+});
+  });
+</script>
+
+
+<!-- Bootstrap JS Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

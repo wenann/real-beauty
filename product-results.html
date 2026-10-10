@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DermIQ — 產品查詢結果</title>
+<!-- Bootstrap CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Noto+Serif+TC:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #F5EFE6;
+    --warm-white: #FBF8F3;
+    --sage: #8BA888;
+    --sage-dark: #5C7A5A;
+    --clay: #C4876A;
+    --charcoal: #2A2A2A;
+    --ink: #1A1A1A;
+    --muted: #9A9188;
+    --border: #DDD5C8;
+    --shadow: 0 4px 24px rgba(42,42,42,0.07);
+  }
+  body {
+    font-family: 'Noto Serif TC', serif;
+    background: var(--warm-white);
+    color: var(--charcoal);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  /* Custom Navbar Styles */
+  .custom-navbar {
+    background: rgba(251,248,243,0.88);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+  .navbar-brand {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--ink) !important;
+  }
+  .nav-pills .nav-link {
+    color: var(--muted);
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-weight: 500;
+  }
+  .nav-pills .nav-link.active {
+    background-color: var(--sage);
+    color: white;
+  }
+  .custom-pill-container {
+    background: rgba(255,252,247,0.9);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 6px;
+  }
+  /* Main Content */
+  .main-content {
+    flex-grow: 1;
+  }
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.4rem;
+    margin-bottom: 16px;
+  }
+  .result-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 32px;
+    box-shadow: var(--shadow);
+  }
+  .query-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    color: var(--sage-dark);
+    margin-bottom: 8px;
+  }
+  .product-name {
+    font-size: 1.6rem;
+    margin-bottom: 24px;
+  }
+  .ingredient-item {
+    background: #FBF8F3;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .ingredient-item strong {
+    color: var(--charcoal);
+  }
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg sticky-top custom-navbar py-3">
+  <div class="container">
+    <a class="navbar-brand" href="index.html">DermIQ</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+      <div class="custom-pill-container d-inline-flex mt-3 mt-lg-0">
+        <ul class="navbar-nav nav-pills gap-1">
+          <li class="nav-item">
+            <a class="nav-link" href="index.html">成分查詢</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="product-search.html">產品查詢</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="features.html">功能介紹</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="personal.html">個人化服務</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<div class="main-content container py-5" style="max-width: 960px;">
+  <h1>產品查詢結果</h1>
+  <div class="result-card mt-4">
+    <div class="query-label">產品名稱</div>
+    <div class="product-name fw-bold" id="productName">-</div>
+    <div class="query-label mt-4">成分清單</div>
+    <ul class="list-unstyled mt-3" id="ingredientList">
+      <li class="ingredient-item">請輸入產品名稱後重新搜尋。</li>
+    </ul>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="py-5 mt-auto" style="background: var(--cream); color: var(--charcoal); border-top: 1px solid var(--border);">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-12 col-md-4 text-center text-md-start mb-4 mb-md-0">
+        <div class="footer-logo fw-bold mb-2" style="font-family: 'Playfair Display', serif; font-size: 1.5rem; color: var(--ink);">DermIQ</div>
+        <div class="text-muted small">智慧化妝品成分知識查詢與分析系統</div>
+      </div>
+      <div class="col-6 col-md-4 text-center">
+        <h6 class="fw-bold mb-3" style="font-family: 'Noto Serif TC', serif; letter-spacing: 1px;">快速連結</h6>
+        <ul class="list-unstyled mb-0 d-flex flex-column gap-2">
+          <li><a href="index.html" class="text-decoration-none text-muted">首頁</a></li>
+          <li><a href="features.html" class="text-decoration-none text-muted">功能介紹</a></li>
+          <li><a href="product-search.html" class="text-decoration-none text-muted">產品查詢</a></li>
+        </ul>
+      </div>
+      <div class="col-6 col-md-4 text-end">
+        <h6 class="fw-bold mb-3" style="font-family: 'Noto Serif TC', serif; letter-spacing: 1px;">聯絡我們</h6>
+        <ul class="list-unstyled text-muted small mb-0">
+          <li class="mb-2">contact@dermiq.com</li>
+          <li class="mb-2">+886 2 1234 5678</li>
+          <li>台灣台北市</li>
+        </ul>
+      </div>
+    </div>
+    <hr class="my-4" style="border-color: var(--border);">
+    <div class="text-center small text-muted" style="font-family: 'DM Mono', monospace; font-size: 0.75rem;">
+      &copy; 2024 DermIQ. COSMETIC INGREDIENT INTELLIGENCE PLATFORM. 專題系統設計
+    </div>
+  </div>
+</footer>
+
+<!-- Bootstrap JS Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  const sampleProducts = {
+    '舒敏保濕乳': ['水', '丁二醇', '玻尿酸', '神經醯胺', '甘油'],
+    '控油防曬': ['二氧化鈦', '氧化鋅', '益膚酸', '玻尿酸', '丁基甲氧基二苯甲酰基甲烷'],
+    '玻尿酸精華': ['玻尿酸鈉', '維他命B5', '甘油', '丁二醇', '泛醇']
+  };
+  function parseQuery() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('q') || '';
+  }
+  function renderProduct(query) {
+    const product = query.trim();
+    document.getElementById('productName').textContent = product || '尚未輸入產品名稱';
+    const list = document.getElementById('ingredientList');
+    list.innerHTML = '';
+    if (!product) {
+      list.innerHTML = '<li class="ingredient-item">請輸入產品名稱後重新搜尋。</li>';
+      return;
+    }
+    const ingredients = sampleProducts[product] || ['無法找到該產品成分資料。請確認產品名稱並重試。'];
+    ingredients.forEach(item => {
+      const li = document.createElement('li');
+      li.className = 'ingredient-item';
+      li.innerHTML = typeof item === 'string' ? `<strong>${item}</strong>` : item;
+      list.appendChild(li);
+    });
+  }
+  renderProduct(parseQuery());
+</script>
+</body>
+</html>

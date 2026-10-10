@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DermIQ — 智慧化妝品成分分析系統</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Noto+Serif+TC:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #F5EFE6;
+    --warm-white: #FBF8F3;
+    --sage: #8BA888;
+    --sage-dark: #5C7A5A;
+    --clay: #C4876A;
+    --clay-light: #E8C4AD;
+    --charcoal: #2A2A2A;
+    --ink: #1A1A1A;
+    --muted: #9A9188;
+    --border: #DDD5C8;
+    --gold: #C9A96E;
+    --safe: #6B9E6B;
+    --caution: #D4A843;
+    --warning: #C4604A;
+    --card-bg: #FFFCF7;
+    --shadow: 0 4px 24px rgba(42,42,42,0.07);
+    --shadow-lg: 0 12px 48px rgba(42,42,42,0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Serif TC', serif;
+    background: var(--warm-white);
+    color: var(--charcoal);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── NOISE TEXTURE ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── NAVBAR ── */
+  .custom-navbar {
+    background: rgba(251,248,243,0.88);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+  .navbar-brand {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--ink) !important;
+  }
+  .nav-pills .nav-link {
+    color: var(--muted);
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-weight: 500;
+  }
+  .nav-pills .nav-link.active {
+    background-color: var(--sage);
+    color: white;
+  }
+  .custom-pill-container {
+    background: rgba(255,252,247,0.9);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 6px;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 120px 48px 80px;
+    overflow: hidden;
+  }
+
+  .hero-bg-circle {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--clay-light) 0%, transparent 70%);
+    opacity: 0.35;
+    animation: float 8s ease-in-out infinite;
+  }
+
+  .hero-bg-circle.c1 { width: 500px; height: 500px; top: -100px; right: -80px; }
+  .hero-bg-circle.c2 { width: 300px; height: 300px; bottom: 60px; left: -60px; animation-delay: -4s; background: radial-gradient(circle, var(--sage) 0%, transparent 70%); opacity: 0.2; }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+  }
+
+  .hero-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 3px;
+    color: var(--clay);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.8rem, 6vw, 5rem);
+    font-weight: 700;
+    text-align: center;
+    color: var(--ink);
+    line-height: 1.1;
+    max-width: 800px;
+    margin-bottom: 20px;
+    animation: fadeUp 0.8s 0.1s ease both;
+  }
+
+  .hero-title em {
+    font-style: italic;
+    color: var(--sage-dark);
+  }
+
+  .hero-sub {
+    font-size: 1rem;
+    color: var(--muted);
+    text-align: center;
+    max-width: 520px;
+    line-height: 1.8;
+    margin-bottom: 48px;
+    animation: fadeUp 0.8s 0.2s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── SEARCH BOX ── */
+  .search-container {
+    width: 100%;
+    max-width: 640px;
+    animation: fadeUp 0.8s 0.3s ease both;
+  }
+
+  .search-box {
+    display: flex;
+    background: var(--card-bg);
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .search-box:focus-within {
+    border-color: var(--sage);
+    box-shadow: 0 0 0 4px rgba(139,168,136,0.15), var(--shadow-lg);
+  }
+
+  .search-input {
+    flex: 1;
+    padding: 18px 24px;
+    border: none;
+    background: transparent;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 1rem;
+    color: var(--ink);
+    outline: none;
+  }
+
+  .search-input::placeholder { color: var(--muted); }
+
+  .search-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: 10px;
+  }
+
+  .camera-btn {
+    background: var(--card-bg);
+    color: var(--sage-dark);
+    border: 1.5px solid var(--border);
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow);
+    transition: background 0.2s, color 0.2s, transform 0.2s;
+  }
+
+  .camera-btn:hover {
+    background: rgba(139,168,136,0.12);
+    color: var(--charcoal);
+    transform: translateY(-1px);
+  }
+
+  .search-btn {
+    background: white;
+    color: var(--charcoal);
+    border: 1.5px solid var(--border);
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    transition: background 0.2s, transform 0.2s, border-color 0.2s;
+  }
+
+  .search-btn:hover {
+    background: rgba(139,168,136,0.12);
+    border-color: var(--sage);
+    transform: translateY(-1px);
+  }
+
+  .search-hint {
+    margin-top: 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .hint-tag {
+    background: var(--cream);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .hint-tag:hover {
+    background: var(--sage);
+    color: white;
+    border-color: var(--sage);
+  }
+
+  /* ── STATS STRIP ── */
+  .stats-strip {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 48px;
+    animation: fadeUp 0.8s 0.4s ease both;
+  }
+
+  .stat-item {
+    flex: 1;
+    padding: 20px 28px;
+    background: var(--card-bg);
+    border-right: 1px solid var(--border);
+    text-align: center;
+  }
+
+  .stat-item:last-child { border-right: none; }
+
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .stat-label {
+    font-size: 0.72rem;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+  }
+
+  /* ── SECTION ── */
+  section { position: relative; z-index: 1; }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--clay);
+    margin-bottom: 8px;
+  }
+
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 16px;
+  }
+
+  /* ── RESULT DEMO SECTION ── */
+  .result-section {
+    padding: 80px 48px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 24px;
+    margin-top: 48px;
+  }
+
+  /* Main Card */
+  .ingredient-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  .card-header {
+    padding: 28px 32px 24px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, var(--cream) 0%, var(--card-bg) 100%);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  .ingredient-name-en {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-style: italic;
+    color: var(--ink);
+  }
+
+  .ingredient-name-zh {
+    font-size: 0.9rem;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .safety-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 2px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: 400;
+    white-space: nowrap;
+  }
+
+  .badge-safe { background: rgba(107,158,107,0.1); color: var(--safe); border: 1px solid rgba(107,158,107,0.3); }
+  .badge-caution { background: rgba(212,168,67,0.1); color: var(--caution); border: 1px solid rgba(212,168,67,0.3); }
+  .badge-warning { background: rgba(196,96,74,0.1); color: var(--warning); border: 1px solid rgba(196,96,74,0.3); }
+
+  .badge-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .card-body { padding: 28px 32px; }
+
+  .info-block {
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .info-block:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+  .info-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--clay);
+    margin-bottom: 8px;
+  }
+
+  .info-text {
+    font-size: 0.88rem;
+    line-height: 1.85;
+    color: var(--charcoal);
+  }
+
+  .effect-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .effect-tag {
+    padding: 4px 12px;
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-size: 0.78rem;
+    color: var(--charcoal);
+  }
+
+  .risk-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .risk-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--caution);
+    margin-top: 5px;
+    flex-shrink: 0;
+  }
+
+  .risk-text { font-size: 0.85rem; line-height: 1.7; color: var(--charcoal); }
+
+  /* Sidebar */
+  .sidebar { display: flex; flex-direction: column; gap: 16px; }
+
+  .sidebar-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 22px 24px;
+    box-shadow: var(--shadow);
+  }
+
+  .sidebar-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.95rem;
+    color: var(--ink);
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .skin-type-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .skin-type-item {
+    padding: 10px;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 0.75rem;
+  }
+
+  .skin-ok { background: rgba(107,158,107,0.1); color: var(--safe); border: 1px solid rgba(107,158,107,0.2); }
+  .skin-no { background: rgba(196,96,74,0.08); color: var(--warning); border: 1px solid rgba(196,96,74,0.15); }
+  .skin-maybe { background: rgba(212,168,67,0.08); color: var(--caution); border: 1px solid rgba(212,168,67,0.2); }
+
+  .concentration-bar {
+    background: var(--cream);
+    border-radius: 2px;
+    height: 8px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+
+  .concentration-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--sage) 0%, var(--clay) 100%);
+    border-radius: 2px;
+    transition: width 1s ease;
+  }
+
+  .conc-label {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  .related-list { list-style: none; }
+
+  .related-item {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.82rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+
+  .related-item:last-child { border-bottom: none; }
+  .related-item:hover { color: var(--sage-dark); }
+  .related-item-arrow { color: var(--muted); font-size: 0.7rem; }
+
+  /* ── FEATURES SECTION ── */
+  .features-section {
+    padding: 80px 48px;
+    background: var(--cream);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .features-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .features-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: end;
+    margin-bottom: 48px;
+  }
+
+  .features-desc {
+    font-size: 0.9rem;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .feature-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 28px 24px;
+    transition: all 0.25s;
+    cursor: default;
+  }
+
+  .feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--sage);
+  }
+
+  .feature-icon {
+    width: 44px; height: 44px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    margin-bottom: 16px;
+  }
+
+  .icon-sage { background: rgba(139,168,136,0.15); }
+  .icon-clay { background: rgba(196,135,106,0.15); }
+  .icon-gold { background: rgba(201,169,110,0.15); }
+
+  .feature-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 10px;
+  }
+
+  .feature-desc {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.75;
+  }
+
+  /* ── PERSONALIZATION SECTION ── */
+  .personal-section {
+    padding: 80px 48px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .personal-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    margin-top: 48px;
+  }
+
+  .personal-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  .personal-card-head {
+    padding: 20px 24px;
+    background: var(--charcoal);
+    color: var(--cream);
+    font-family: 'Playfair Display', serif;
+    font-size: 0.95rem;
+  }
+
+  .profile-form { padding: 24px; }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+
+  .form-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .form-control {
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 8px 12px;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 0.82rem;
+    color: var(--charcoal);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .form-control:focus { border-color: var(--sage); }
+
+  .form-control select { appearance: none; }
+
+  .allergy-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .allergy-tag {
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-size: 0.72rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: white;
+  }
+
+  .allergy-tag.active {
+    background: var(--warning);
+    color: white;
+    border-color: var(--warning);
+  }
+
+  .save-btn {
+    width: 100%;
+    margin-top: 16px;
+    padding: 11px;
+    background: var(--charcoal);
+    color: var(--cream);
+    border: none;
+    border-radius: 3px;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .save-btn:hover { background: var(--sage-dark); }
+
+  /* Alerts Panel */
+  .alert-list { padding: 0 24px 24px; }
+
+  .alert-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .alert-item:last-child { border-bottom: none; }
+
+  .alert-icon {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+  }
+
+  .alert-red { background: rgba(196,96,74,0.12); color: var(--warning); }
+  .alert-yellow { background: rgba(212,168,67,0.12); color: var(--caution); }
+  .alert-green { background: rgba(107,158,107,0.12); color: var(--safe); }
+
+  .alert-body {}
+  .alert-title { font-size: 0.85rem; font-weight: 500; color: var(--ink); margin-bottom: 3px; }
+  .alert-sub { font-size: 0.75rem; color: var(--muted); line-height: 1.5; }
+
+  /* ── OCR SECTION ── */
+  .ocr-section {
+    padding: 80px 48px;
+    background: var(--charcoal);
+    border-top: 1px solid #3A3A3A;
+  }
+
+  .ocr-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: center;
+  }
+
+  .ocr-content {}
+  .ocr-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--clay-light);
+    margin-bottom: 12px;
+  }
+
+  .ocr-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    color: var(--cream);
+    line-height: 1.2;
+    margin-bottom: 16px;
+  }
+
+  .ocr-desc {
+    font-size: 0.88rem;
+    color: #9A9188;
+    line-height: 1.85;
+    margin-bottom: 28px;
+  }
+
+  .ocr-steps { display: flex; flex-direction: column; gap: 16px; }
+
+  .ocr-step {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .step-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-style: italic;
+    color: var(--clay);
+    line-height: 1;
+    min-width: 28px;
+  }
+
+  .step-text { font-size: 0.85rem; color: #B0A89A; line-height: 1.7; }
+
+  /* Upload mockup */
+  .upload-mockup {
+    background: #333;
+    border: 1px dashed #555;
+    border-radius: 8px;
+    padding: 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .upload-mockup:hover { border-color: var(--sage); }
+
+  .upload-icon { font-size: 2.5rem; opacity: 0.7; }
+
+  .upload-text {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 0.88rem;
+    color: #9A9188;
+    text-align: center;
+    line-height: 1.6;
+  }
+
+  .upload-btn {
+    background: var(--sage);
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 3px;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .upload-btn:hover { background: var(--sage-dark); }
+
+  .future-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 2px;
+    color: var(--gold);
+    border: 1px solid var(--gold);
+    padding: 3px 10px;
+    border-radius: 2px;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--cream);
+    color: var(--charcoal);
+    border-top: 1px solid var(--border);
+  }
+
+  .footer-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+    color: var(--cream);
+  }
+
+  .footer-text { font-size: 0.75rem; letter-spacing: 0.5px; }
+
+  /* ── INTERACTIVE JS ── */
+
+  /* Tab system */
+  .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+
+  .tab-btn {
+    padding: 10px 20px;
+    border: none;
+    background: none;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 0.82rem;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.2s;
+  }
+
+  .tab-btn.active {
+    color: var(--charcoal);
+    border-bottom-color: var(--sage);
+  }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--cream); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  @media (max-width: 900px) {
+    nav { padding: 16px 24px; gap: 12px; flex-wrap: wrap; }
+    .nav-tabs { display: none; }
+    .hero { padding: 100px 24px 60px; }
+    .result-grid, .features-header, .feature-grid, .personal-grid, .ocr-inner { grid-template-columns: 1fr; }
+    .result-section, .features-section, .personal-section, .ocr-section { padding: 60px 24px; }
+    .stats-strip { display: none; }
+    footer { flex-direction: column; gap: 16px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg sticky-top custom-navbar py-3">
+  <div class="container">
+    <a class="navbar-brand d-flex align-items-baseline gap-2" href="index.html">
+      DermIQ
+      <span class="badge fw-normal" style="font-family: 'DM Mono', monospace; font-size: 0.65rem; color: var(--sage); border: 1px solid var(--sage); background: transparent; letter-spacing: 2px;">BETA</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+      <div class="custom-pill-container d-inline-flex mt-3 mt-lg-0 shadow-sm">
+        <ul class="navbar-nav nav-pills gap-1">
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="index.html">成分查詢</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="product-search.html">產品查詢</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="features.html">功能介紹</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="personal.html">個人化服務</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="search">
+  <div class="hero-bg-circle c1"></div>
+  <div class="hero-bg-circle c2"></div>
+
+  <!-- <div class="hero-eyebrow">智慧化妝品成分分析系統</div> -->
+  <h1 class="hero-title">了解你塗在<em>臉上</em>的每一樣東西</h1>
+  <p class="hero-sub">輸入成分名稱（中文或英文），即時獲取成分說明、功效、潛在風險，以及是否適合你的膚質。</p>
+
+  <div class="search-container">
+    <div class="search-box">
+      <input class="search-input" id="mainSearch" type="text" placeholder="試試輸入：菸鹼醯胺 / Niacinamide / Retinol…" />
+      <div class="search-actions">
+        <button class="search-btn" onclick="doSearch()" title="搜尋">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" />
+            <line x1="16.5" y1="16.5" x2="21" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        </button>
+        <button class="camera-btn" onclick="openImageRecognition()" title="使用圖像辨識">📷</button>
+        <input type="file" id="cameraInput" accept="image/*" hidden onchange="handleImageSelected(event)">
+      </div>
+    </div>
+    <div class="search-hint">
+      <span>常見搜尋：</span>
+      <span class="hint-tag" onclick="fillSearch('玻尿酸')">玻尿酸</span>
+      <span class="hint-tag" onclick="fillSearch('水楊酸')">水楊酸</span>
+      <span class="hint-tag" onclick="fillSearch('視黃醇')">視黃醇</span>
+      <span class="hint-tag" onclick="fillSearch('菸鹼醯胺')">菸鹼醯胺</span>
+      <span class="hint-tag" onclick="fillSearch('杏仁酸')">杏仁酸</span>
+    </div>
+  </div>
+
+  <div class="stats-strip">
+    <div class="stat-item">
+      <!-- <div class="stat-num">3,200+</div>
+      <div class="stat-label">成分收錄數量</div> -->
+    </div>
+    <div class="stat-item">
+      <!-- <div class="stat-num">中 / EN</div>
+      <div class="stat-label">雙語查詢支援</div> -->
+    </div>
+    <div class="stat-item">
+      <!-- <div class="stat-num">5 類</div>
+      <div class="stat-label">風險分級標準</div> -->
+    </div>
+    <div class="stat-item">
+      <!-- <div class="stat-num">即時</div>
+      <div class="stat-label">分析速度</div> -->
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="py-5">
+  <div class="container">
+    <div class="row align-items-center">
+      <!-- 區塊一：快速連結 (置中) -->
+      <div class="col-6 text-center">
+        <h6 class="fw-bold mb-3" style="font-family: 'Noto Serif TC', serif; letter-spacing: 1px; color: var(--charcoal);">快速連結</h6>
+        <div class="d-flex justify-content-center gap-2 gap-md-4 footer-text">
+          <a href="index.html" class="text-decoration-none fw-bold" style="color: var(--sage-dark);">首頁</a>
+          <a href="features.html" class="text-decoration-none fw-bold" style="color: var(--sage-dark);">功能介紹</a>
+          <a href="product-search.html" class="text-decoration-none fw-bold" style="color: var(--sage-dark);">產品查詢</a>
+        </div>
+      </div>
+      <!-- 區塊二：聯絡資訊 (靠右) -->
+      <div class="col-6 text-end">
+        <h6 class="fw-bold mb-3" style="font-family: 'Noto Serif TC', serif; letter-spacing: 1px; color: var(--charcoal);">聯絡我們</h6>
+        <ul class="list-unstyled footer-text mb-0" style="color: var(--charcoal);">
+          <li class="mb-1">contact@dermiq.com</li>
+          <li class="mb-1">+886 2 1234 5678</li>
+          <li>台灣台北市</li>
+        </ul>
+      </div>
+    </div>
+    <hr class="mt-4 mb-3" style="border-color: var(--border);">
+    <div class="row">
+      <div class="col-12 text-center footer-text" style="font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted);">
+        &copy; 2024 DermIQ. COSMETIC INGREDIENT INTELLIGENCE PLATFORM. 專題系統設計
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Search
+  function doSearch() {
+    const q = document.getElementById('mainSearch').value.trim();
+    if (!q) return;
+    window.location.href = `results.html?q=${encodeURIComponent(q)}`;
+  }
+
+  function fillSearch(text) {
+    document.getElementById('mainSearch').value = text;
+    doSearch();
+  }
+
+  function scrollToSearch() {
+    document.getElementById('search').scrollIntoView({ behavior: 'smooth' });
+  }
+
+ function openImageRecognition() {
+  document.getElementById('cameraInput').click();
+}
+
+function handleImageSelected(event) {
+  const selectedFile = event.target.files[0];
+
+  if (!selectedFile) {
+    return;
+  }
+
+  if (!selectedFile.type.startsWith('image/')) {
+    alert('請選擇圖片檔案。');
+    event.target.value = '';
+    return;
+  }
+
+  // 測試版先限制圖片大小，避免瀏覽器暫存空間不足
+  const maxSize = 4 * 1024 * 1024;
+
+  if (selectedFile.size > maxSize) {
+    alert('圖片太大，請選擇小於 4 MB 的圖片。');
+    event.target.value = '';
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onload = function () {
+    try {
+      // 暫存圖片與檔名，讓 ocr.html 可以取得
+      sessionStorage.setItem('ocrImage', reader.result);
+      sessionStorage.setItem('ocrImageName', selectedFile.name);
+
+      // 前往 OCR 頁面
+      window.location.href = 'ocr.html';
+    } catch (error) {
+      alert('圖片無法暫存，請選擇較小的圖片後再試一次。');
+      console.error(error);
+    }
+  };
+
+  reader.onerror = function () {
+    alert('讀取圖片失敗，請重新選擇圖片。');
+  };
+
+  reader.readAsDataURL(selectedFile);
+}
+
+
+  // Enter key
+  document.getElementById('mainSearch').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doSearch();
+  });
+
+  // Tabs
+  function switchTab(btn, tabId) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + tabId).classList.add('active');
+  }
+
+  // Allergy tags
+  function toggleTag(el) {
+    el.classList.toggle('active');
+  }
+
+  // Smooth scroll for nav
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const target = document.querySelector(a.getAttribute('href'));
+      if (target) target.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+
+  // Animate concentration bar on scroll
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.width = entry.target.dataset.width || '60%';
+      }
+    });
+  });
+
+  document.querySelectorAll('.concentration-fill').forEach(el => {
+    el.dataset.width = el.style.width;
+    el.style.width = '0%';
+    observer.observe(el);
+  });
+</script>
+<!-- Bootstrap JS Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
